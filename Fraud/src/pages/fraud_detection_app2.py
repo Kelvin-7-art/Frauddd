@@ -47,13 +47,16 @@ except Exception:
 
 
 # -------------------- Page --------------------
-# Guard set_page_config so reloads don’t crash
 try:
-    st.set_page_config(page_title=" Fraud Detection App", page_icon="Fraud_Detection_App", layout="wide")
+    st.set_page_config(
+        page_title="Fraud Detection App",
+        page_icon="🛡️",
+        layout="wide"
+    )
 except Exception:
     pass
 
-# --- Sidebar layout & widget polish (fix cramped multiselect) ---
+# --- Sidebar layout & widget styling ---
 st.markdown("""
 <style>
 /* Wider sidebar on desktop */
@@ -101,13 +104,25 @@ section[data-testid="stSidebar"] > div {
   z-index: 1000 !important;
 }
 
-/* Optional: sidebar background to match your palette
-[data-testid="stSidebar"] { background: #0F2041; }
-[data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span { color: white; }
-*/
+/* Sidebar background + text colour for readability */
+[data-testid="stSidebar"] {
+  background-color: #0F2041;
+}
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] h6 {
+  color: #F9FAFB !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
+# --- Header card ---
 st.markdown(
     """
     <div style="
@@ -120,11 +135,11 @@ st.markdown(
         box-shadow: 0 12px 28px rgba(0,0,0,0.12);
         margin-bottom: 22px;">
       <div style="font-size: 2rem; font-weight: 800; line-height: 1.2; letter-spacing: .2px;">
-        Transaction Fraud  <span style="color:#D4AF37;">App</span>
+        Transaction Fraud <span style="color:#D4AF37;">App</span>
       </div>
       <div style="height: 1px; background: rgba(255,255,255,0.55); margin: 10px 0 12px 0;"></div>
       <div style="opacity:.9; font-size: 0.98rem;">
-        Advanced Algorithms for fraud detection.
+        Advanced algorithms for fraud detection.
       </div>
     </div>
     """,
@@ -198,7 +213,7 @@ def build_preprocessor(schema_name: str, X: pd.DataFrame):
     orig_cols = X.columns.tolist()
 
     if schema_name == "pca":
-        v_cols = sorted([c for c in orig_cols if re.fullmatch(r"V\\d+", c)])
+        v_cols = sorted([c for c in orig_cols if re.fullmatch(r"V\d+", c)])
         extra = [c for c in ["Time", "Amount"] if c in orig_cols]
         numeric = v_cols + extra
         categorical = []
@@ -243,7 +258,9 @@ def build_preprocessor(schema_name: str, X: pd.DataFrame):
 
 def plot_confusion(cm, labels):
     fig, ax = plt.subplots(figsize=(4, 4))
-    ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels).plot(ax=ax, cmap=plt.cm.Blues, values_format='d')
+    ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels).plot(
+        ax=ax, cmap=plt.cm.Blues, values_format='d'
+    )
     st.pyplot(fig)
     plt.close(fig)
 
@@ -283,7 +300,7 @@ def balanced_class_weights_dict(y: pd.Series) -> dict:
     return {int(cls): float(total / (n_classes * cnt)) for cls, cnt in zip(classes, counts)}
 
 
-# -------------------- NN Wrapper (fixed) --------------------
+# -------------------- NN Wrapper --------------------
 class _NNWrapper:
     """
     Sklearn-like wrapper around (preprocessor, keras_model).
@@ -293,8 +310,8 @@ class _NNWrapper:
     def __init__(self, prep, mdl):
         self.prep = prep
         self.clf = mdl
-        self._estimator_type = "classifier"    # tell sklearn it's a classifier
-        self.classes_ = np.array([0, 1])       # positive/negative classes
+        self._estimator_type = "classifier"
+        self.classes_ = np.array([0, 1])
 
     def fit(self, X, y=None):
         return self  # model already trained
@@ -372,7 +389,10 @@ def show_feature_importance(pipeline, X, y):
             st.info("Feature importance not available for this estimator.")
             return
 
-        imp_df = pd.DataFrame({"Feature": feat_names, "Importance": importance}).sort_values("Importance", ascending=False)
+        imp_df = (
+            pd.DataFrame({"Feature": feat_names, "Importance": importance})
+            .sort_values("Importance", ascending=False)
+        )
         st.caption(f"Method: **{method}**")
 
         if HAS_SNS:
@@ -403,7 +423,7 @@ def show_correlation_matrix(schema_name: str, X: pd.DataFrame):
     st.subheader("Correlation Matrix (original numeric columns)")
     if schema_name == "pca":
         num_cols = sorted(
-            [c for c in X.columns if re.fullmatch(r"V\\d+", c)]
+            [c for c in X.columns if re.fullmatch(r"V\d+", c)]
             + [c for c in ["Time", "Amount"] if c in X.columns]
         )
     else:
@@ -463,7 +483,8 @@ if HAS_TF:
 classifier = st.sidebar.selectbox("Estimator", tuple(model_options))
 
 metrics_to_plot = st.sidebar.multiselect(
-    "Curves to plot", ("Confusion Matrix", "ROC Curve", "Precision-Recall Curve"),
+    "Curves to plot",
+    ("Confusion Matrix", "ROC Curve", "Precision-Recall Curve"),
     default=("Confusion Matrix", "ROC Curve", "Precision-Recall Curve")
 )
 
@@ -472,11 +493,13 @@ if classifier == "Random Forest":
     n_estimators = st.sidebar.number_input("n_estimators", 10, 2000, value=300, step=10)
     max_depth = st.sidebar.number_input("max_depth (0=None)", 0, 300, value=0, step=1)
 elif classifier == "Logistic Regression":
-    C = st.sidebar.number_input("C (inverse regularization)", 1e-4, 100.0, value=1.0, step=0.1, format="%.4f")
+    C = st.sidebar.number_input("C (inverse regularization)", 1e-4, 100.0, value=1.0,
+                                step=0.1, format="%.4f")
     max_iter = st.sidebar.number_input("max_iter", 50, 5000, value=400, step=50)
     solver = st.sidebar.selectbox("solver", ["lbfgs", "saga", "liblinear"])
 elif classifier == "SVM":
-    C_svm = st.sidebar.number_input("C", 1e-4, 100.0, value=1.0, step=0.1, format="%.4f")
+    C_svm = st.sidebar.number_input("C", 1e-4, 100.0, value=1.0,
+                                    step=0.1, format="%.4f")
     kernel = st.sidebar.selectbox("kernel", ("rbf", "linear"))
     gamma = st.sidebar.selectbox("gamma", ("scale", "auto"))
 
@@ -523,7 +546,7 @@ if schema_used is None:
     st.error("Please select a schema.")
     st.stop()
 
-st.info(f" Using schema: **{schema_used.upper()}**")
+st.info(f"Using schema: **{schema_used.upper()}**")
 
 # Build X, y
 if schema_used == "pca":
@@ -531,7 +554,7 @@ if schema_used == "pca":
         st.error("PCA schema requires a 'Class' column.")
         st.stop()
     y = df["Class"].astype(int)
-    v_cols = sorted([c for c in df.columns if re.fullmatch(r"V\\d+", c)])
+    v_cols = sorted([c for c in df.columns if re.fullmatch(r"V\d+", c)])
     extras = [c for c in ["Time", "Amount"] if c in df.columns]
     used_cols = v_cols + extras
     if not used_cols:
@@ -602,7 +625,6 @@ if classifier == "Random Forest":
 
 elif classifier == "Logistic Regression":
     lr_kwargs = dict(C=float(C), max_iter=int(max_iter), class_weight=cw, solver=solver)
-    # n_jobs supported for liblinear and saga
     if solver in ("saga", "liblinear"):
         lr_kwargs["n_jobs"] = -1
     clf = LogisticRegression(**lr_kwargs)
@@ -643,13 +665,13 @@ else:
         Dense(1, activation='sigmoid')
     ])
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    checkpoint = ModelCheckpoint('shallow_nn.keras', save_best_only=True, monitor='val_loss', mode='min')
+    checkpoint = ModelCheckpoint('shallow_nn.keras', save_best_only=True,
+                                 monitor='val_loss', mode='min')
     with st.spinner("Training shallow neural network…"):
-        model.fit(X_train_t, y_train, validation_split=0.1, epochs=12, callbacks=[checkpoint], verbose=0)
+        model.fit(X_train_t, y_train, validation_split=0.1,
+                  epochs=12, callbacks=[checkpoint], verbose=0)
     y_score = model.predict(X_test_t).flatten()
     y_pred = (y_score > 0.5).astype(int)
-
-    # Wrap to look like sklearn for downstream utilities (incl. permutation_importance)
     pipe = _NNWrapper(preprocessor, model)
 
 # -------------------- Metrics --------------------
@@ -669,7 +691,8 @@ k4.metric("F1-score", f"{f1:.4f}")
 k5.metric("ROC AUC", "—" if np.isnan(roc_auc) else f"{roc_auc:.4f}")
 k6.metric("PR AUC",  "—" if np.isnan(avg_prec) else f"{avg_prec:.4f}")
 
-plot_curves(metrics_to_plot, pipe, X_test, y_test, y_score=y_score, is_nn=(classifier == "Shallow Neural Network"))
+plot_curves(metrics_to_plot, pipe, X_test, y_test,
+            y_score=y_score, is_nn=(classifier == "Shallow Neural Network"))
 
 st.divider()
 show_feature_importance(pipe, X, y)
@@ -690,7 +713,10 @@ with st.expander("Quick EDA (sampled)", expanded=False):
         fig, ax = plt.subplots(figsize=(6, 4))
         try:
             if HAS_SNS:
-                sns.histplot(data=sample, x=col, hue="__label__", bins=60, stat="density", common_norm=False, ax=ax)
+                sns.histplot(
+                    data=sample, x=col, hue="__label__",
+                    bins=60, stat="density", common_norm=False, ax=ax
+                )
             else:
                 a = sample[sample["__label__"] == 0][col].dropna()
                 b = sample[sample["__label__"] == 1][col].dropna()
@@ -707,7 +733,9 @@ with st.expander("Quick EDA (sampled)", expanded=False):
     if schema_used == "pca" and all(c in sample.columns for c in ["V1", "V2"]):
         fig, ax = plt.subplots(figsize=(6, 4))
         if HAS_SNS:
-            sns.scatterplot(data=sample, x="V1", y="V2", hue="__label__", ax=ax, s=12)
+            sns.scatterplot(
+                data=sample, x="V1", y="V2", hue="__label__", ax=ax, s=12
+            )
         else:
             c0 = sample[sample["__label__"] == 0]
             c1 = sample[sample["__label__"] == 1]

@@ -104,7 +104,7 @@ section[data-testid="stSidebar"] > div {
   z-index: 1000 !important;
 }
 
-/* Sidebar background + text colour for readability */
+/* Sidebar background + base text colour */
 [data-testid="stSidebar"] {
   background-color: #0F2041;
 }
@@ -118,9 +118,24 @@ section[data-testid="stSidebar"] > div {
 [data-testid="stSidebar"] h5,
 [data-testid="stSidebar"] h6 {
   color: #F9FAFB !important;
+  opacity: 1 !important;   /* kill Streamlit’s dimming */
+}
+
+/* >>> Make file-uploader text + caption bright and readable <<< */
+[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
+  color: #F9FAFB !important;
+  opacity: 1 !important;
+}
+
+/* Caption under the uploader (“No bundled demo CSV…”) */
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] small {
+  color: #E5E7EB !important;
+  opacity: 1 !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # --- Header card ---
 st.markdown(
@@ -745,3 +760,4 @@ with st.expander("Quick EDA (sampled)", expanded=False):
         ax.set_title("V1 vs V2 (sample)")
         st.pyplot(fig)
         plt.close(fig)
+
